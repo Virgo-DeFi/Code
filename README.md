@@ -3,7 +3,7 @@
 <p align="center" style="color:DodgerBlue; font-family:cambria; font-variant: normal; font-size:1000pt">Columbia | FinTech
 </p>
 
-# PROJECT3: virgoDeFi in Solidity
+# Project 3: virgoDeFi in Solidity
 
 ![contract](Images/Virgo.jpg)
 
@@ -41,18 +41,19 @@ THe following are tools used for the projects:
 
 <details><summary>  <b> Design </b></summary>
 
-The Project invloves building 6 integrated smart contracts that combine to provide full customer functionality.
+The Project integrates 6 smart contracts that combine to provide full customer functionality.
 
 Virgo Contract ==> Oracle ==> Buy Token ==> Loan Token ==> Collateral ==> Loan​
 </details>
 
 # Virgo Contract
 <details><summary>  <b> Virgo Contract </b></summary>
+
 [`virgoContract.sol`](virgoContract.sol) -- virgo contract creates the Crypto Portfolio and Token Specific Account Tracking​. It achieves the following:
 
-•	Allow users to deposit ether.
+•	Allow users to deposit ether
 
-•	Map the sender address to their respective coin balance.
+•	Map the sender address to their respective coin balance
 
 •	With the contract, we can update the users’ coin balances with the equivalent token and
 
@@ -66,7 +67,7 @@ Virgo Contract ==> Oracle ==> Buy Token ==> Loan Token ==> Collateral ==> Loan�
 
 [`Oracle.sol`](Oracle.sol) ---This contract contains real-time pricing feeds.
 
-[`buyToken.sol`](buyToken.sol) -- This contract calls the oracle.sol when the user is buying the token and uses the pricing from the oracle.sol contract to determine the number of token the user can buy.
+[`buyToken.sol`](buyToken.sol) -- This contract calls Oracle.sol when the user is buying the token and uses the pricing from the Oracle.sol contract to determine the number of token the user can buy.
 
 It achieves the following:
 
@@ -76,11 +77,10 @@ It achieves the following:
 
 •	Buy Tokens based on user’s token Symbol (e.g. BTC, UNI or LINK) along with the ETH Buy Amount
 
-•	Use ERC-20 to create tokens
+•	Use ERC-20 to mint tokens via [`loanToken.sol`](loanToken.sol)
 	
 •	Calculates no of Tokens to be minted by dividing ETH BuyAmount / TokenPrice
 
-•	Mint contract to issue new tokens for Owner
 
 </details>
 
@@ -106,9 +106,9 @@ It achieves the following:
 
 •	Creates loan request object based on user's token collateral, collateral amount, loan amount, payoff amount and duration
 
-•	Loan object imported from Loan contract
+•	Loan object imported from [`loan.sol`](loan.sol)
 
-•	Provides function for a lender to accept loan request by
+•	Provides function for a lender to accept loan request and transfer ETH
 </details>
 
 # Loan Contract
@@ -117,17 +117,17 @@ It achieves the following:
 
 [`loan.sol`](loan.sol) ---This contract achieves the following :
 
-•	Creates Loan Object with attributes
-		1.Borrower 
-		2.Lender 
-		3.Collateral amount 
-		4.Loan amount 
-		5.Payoff amount 
-		6.Loan Duration 
+•	Creates Loan Object with attributes: <br/>
+		1.Borrower <br/>
+		2.Lender <br/>
+		3.Collateral amount <br/>
+		4.Loan amount <br/>
+		5.Payoff amount <br/>
+		6.Loan Duration <br/>
 
-•	Pay Loan: Repay the ETH payoff amount and transfer token to borrower
+•	Pay Loan: Repay the ETH payoff amount and transfer token collateral back to borrower
 
-•	Repossess Loan: Overdue Loan closed and Transfer collateral tokens to Lender
+•	Repossess Loan: Overdue Loan closed and transfer token collateral to Lender
 
 </details>
 
@@ -137,7 +137,7 @@ It achieves the following:
 
 ![Workflow](Images/Workflow.png)
 	
-Below follows a practical walk-through of the steps involved to create a virgoDeFi account and borrow ETH.
+Below is a practical walk-through of the steps involved to create a virgoDeFi account and borrow ETH.
 
 ## Before You Start <br/>
 • Open Solidity files in Remix <br/>
@@ -151,8 +151,10 @@ Below follows a practical walk-through of the steps involved to create a virgoDe
 	
 • First compile and deploy [`virgoContract.sol`](virgoContract.sol) <br/>
 	
-• To deposit ETH: set msg.value to deposit amount, click `Deposit` button and enter ETH deposit amount <br/>
-	
+• To deposit ETH: set `msg.value` to deposit amount, click `Deposit` button and enter ETH deposit amount <br/>
+
+• ETH deposit will be transferred to [`virgoContract.sol`](virgoContract.sol)
+
 • Check `userBalanceETH`, `userBalanceBTC`, and `balanceContract` <br/>
 
 ## Buying Tokens <br/>
@@ -164,7 +166,7 @@ Below follows a practical walk-through of the steps involved to create a virgoDe
 	
 • Go to `GetLivePrice` and enter `BTC`, `UNI` or `LINK` to get live prices <br/>
 	
-• Not that prices are quoted in Wei <br/>
+• Note that prices are quoted in Wei <br/>
 	
 • To actually buy tokens switch back to Local network with appropriate account <br/>
 	
@@ -205,7 +207,7 @@ Below follows a practical walk-through of the steps involved to create a virgoDe
   `Owner` = user <br/>
   `Spender` = `loanRequest` contract <br/>
 	
-• To accept the `loanRequest`, first change the user to the `lender` address <br/>
+• To accept the `loanRequest`, change `msg.sender` to the `lender` address <br/>
 	
 • Then re-open `loanRequest` <br/>
 	
@@ -218,27 +220,27 @@ Below follows a practical walk-through of the steps involved to create a virgoDe
 ## Repaying/Repossessing The Loan <br/>
 • Open the new [`loan`](loan.sol) object by copying the `loan` object address under `loanRequest`, change `CONTRACT` field to `Loan`, and entering the `loan` object address in `At Address`. The `loan` object will appear in the lefthand column <br/>
 	
-• The loan can be repaid anytime before the due date. Check `Fakenow` for current time and check due date. `fastforward` shifts 400 days. <br/>
+• The loan can be repaid anytime before the due date. Check `Fakenow` for current time and check `dueDate`. `fastforward` shifts 400 days forward. <br/>
 	
 • To repay the loan, set `msg.sender` to the borrower (though technically anyone can repay the loan). Set `msg.value` to loan `payoffamount` amount and click `payLoan` <br/>
 	
-• Borrower will transfer `ETH` payoff amount to the `loan` contract which via `selfdestruct` will transfer ETH to the Lender <br/>
+• Borrower will transfer `ETH` payoff amount to the `loan` contract which via `selfdestruct` will transfer ETH back to the Lender <br/>
 	
-• The borrower will receive the collateral back, and a reduced ETH balance to reflect loan payment, both reflected in the user balances [`virgoContract`](virgoContract.sol) <br/>
+• The borrower will receive the token collateral back, and a reduced ETH balance to reflect loan payment, both reflected in [`virgoContract`](virgoContract.sol) user balances <br/>
 	
 • Loans that are not repaid before the due date are subject to repossession whereby token collateral is transferred from loan contract to the lender <br/>
 	
-• To test this, due to `selfdestruct`, need to re-issue another loan on same terms: <br/>
+• To test this, due to `selfdestruct`, we need to first re-issue another loan on same terms: <br/>
 	
 • Set `msg.sender` to Lender <br/>
 	
-• Open existing ['loanRequest`] <br/>
+• Open existing 'loanRequest` <br/>
 	
 • Check `At Address` empty <br/>
 	
 • Set `msg.value` to loan amount and click `LendEther` <br/>
 	
-• Open `Loan`: <br/>
+• Open the new [`loan`] object by copying the `loan` object address under `loanRequest`c<br/>
 	
 • Change `CONTRACT` field to `Loan` <br/>
 	
