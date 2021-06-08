@@ -3,15 +3,15 @@
 <p align="center" style="color:DodgerBlue; font-family:cambria; font-variant: normal; font-size:1000pt">Columbia | FinTech
 </p>
 
-# PROJECT3: VIRGO-DEFI SOLIDITY CONTRACT
+# PROJECT3: virgoDeFi in Solidity
 
 ![contract](Images/Virgo.jpg)
 
 # Overview
 
-The aim of the project is to build an application that will allow users use their token as collaterals for loans.
-The program is built using SMART contract on Solidity.A users who can deposit Etherium into the contract can also initiate a process to book a loan against his/her deposit,
-the user can borrow ETH against Crypto holdings by applying certain LTV (<60%) & term which determines rate.
+The project aims to build a DeFi application where users can purchase and manage crypto and use their tokens as collaterals for loans.
+The application is built using smart contracts on Solidity. Users can deposit Ethereum into the contract and can initiate a process to book a loan against his/her deposit,
+the user can borrow ETH against Crypto holdings subject to a 50% LTV threshold.
 
 # Introduction
 
@@ -41,38 +41,9 @@ THe following are tools used for the projects:
 
 <details><summary>  <b> Design </b></summary>
 
-The Project invloves building the 5 smart contracts which works together  as a unit to provide the best user experience.
+The Project invloves building 6 integrated smart contracts that combine to provide full customer functionality.
 
 Virgo Contract ==> Buy Token ==> Loan Token ==> Collateral ==> Loan​
-</details>
-
-
-# Process workflow
-
-<details><summary>  <b> Workflow </b></summary>
-
-![Workflow](Images/Workflow.png)
-	
-The process flow involves the following steps highlighted below.
-
-•	virgoContract > deposit ETH, create token balances (initial zero) 
-
-•	buyToken > fetch real-time pricing, purchase tokens
-
-•	Loan_token > mint tokens
-
-•	buyToken > update virgoContract balances 
-
-•	Collateral > create loan_request
-
-•	Loan_token > set token transfer allowances
-
-•	Loan > upon loan approval, loan object is created
-
-•	Collateral > transfer tokens to loan contract, transfer ETH to borrower
-
-•	Loan > repay loan before due date, or repossess overdue loan
-
 </details>
 
 # Virgo Contract
@@ -95,7 +66,7 @@ The process flow involves the following steps highlighted below.
 
 [`Oracle.sol`](Oracle.sol) ---This contract determing the pricing.
 
-[`P3_buyToken.sol`](P3_buyToken.sol) -- This contract calls the oracle.sol when the user is buying the token and uses the pricing from the oracle.sol contract to determing the number of token the user can buy.
+[`P3_buyToken.sol`](P3_buyToken.sol) -- This contract calls the oracle.sol when the user is buying the token and uses the pricing from the oracle.sol contract to determine the number of token the user can buy.
 
 It achieves the following:
 
@@ -155,6 +126,130 @@ It achieves the following:
 •	Pay Loan: Repay the ETH payoff amount and transfer token to borrower
 
 •	Repossess Loan: Overdue Loan closed and Transfer collateral tokens to Lender
+
+</details>
+
+# Process workflow
+
+<details><summary>  <b> Workflow </b></summary>
+
+![Workflow](Images/Workflow.png)
+	
+Below follows a practical walk-through of the steps involved to create an account and borrow ETH.
+
+## Before You Start <br/>
+• Switch to local network <br/>
+	
+• Set msgSender to your account <br/>
+
+## Opening Your Account <br/>
+• virgoContract allows you to open token accounts and track your balances <br/>
+	
+• First compile and deploy virgoContract <br/>
+	
+• To deposit ETH: set msg.value to deposit amount, click Deposit button and enter ETH deposit amount <br/>
+	
+• Check userBalanceETH, userBalanceBTC, and balanceContract <br/>
+
+## Buying Tokens <br/>
+• Compile and deploy buyToken providing the virgoContract address <br/>
+	
+• For live prices, switch to Kovan testnet with an account containing sufficient ETH balance <br/>
+	
+• Compile/Deploy buytoken <br/>
+	
+• Go to GetLivePrice and enter one of BTC, UNI, LINK to get live prices <br/>
+	
+• Not that prices are quoted in Wei <br/>
+	
+• To actually buy tokens switch back to Local network with appropriate account <br/>
+	
+• Redeploy buyToken<br/>
+	
+• Click buyTokens and enter token symbol (BTC, UNI or LINK) and buy amount in ETH, then transact. New tokens will be minted and automatically transfer to the user. virgoContract <br/>
+	
+• balances will also update <br/>
+	
+• In case of insufficient ETH balance, transaction will be rejected <br/>
+	
+• Check noTokens to see the equivalent number of tokens for the ETH purchase amount based on the token price <br/>
+	
+• Go back to virgoContract and check the relevant balanceUser (eg balanceUserBTC for BTC purchase) and balanceUserETH which should show reduced ETH balance to reflect purchase <br/>
+	
+• At buyToken click token to copy new token address from buytoken. Change CONTRACT to Token and enter the token address At Address. Then open the new token <br/>
+	
+• Check user’s token balance which should reflect purchased tokens <br/>
+	
+• Check allowance (owner= buyToken, spender= user) which should be 0 <br/>
+	
+• Repeat process for other tokens. Note that at this point each purchase results in a new token mint, ie repeat token purchases are minted separately <br/>
+
+## Borrowing Against Crypto <br/>
+• Set msg.sender to borrower <br/>
+	
+• Compile collateral then deploy loanRequest providing virgoContract, token addresses and relevant loan parameters (all in 18 decimals units, like Wei) <br/>
+	
+• loanRequest verifies that the implied LTV <= 50% and that user (msg.sender) has sufficient token balance to support the collateral amount <br/>
+	
+• If successful, a new loanRequest object is created in the lefthand column <br/>
+	
+• Before the loanRequest can be accepted, the user needs to approve the new loanRequest contract’s ability to transfer the borrower’s tokens as collateral to a new loan contract:<br/>
+	
+• Open token in lefthand column and click Approve entering the following details <br/>
+  Spender = loanRequest contract address <br/>
+  Amount =  collateral amount of loanRequest <br/>
+	
+• Confirm the approval of the collateral amount by verifying Allowance: <br/>
+  Owner = user <br/>
+  Spender = loanRequest contract <br/>
+	
+• To accept the loan request, first change the user to the lender address <br/>
+	
+• Then open loanRequest <br/>
+	
+• Check At Address field is empty <br/>
+	
+• Enter msg.value = requested loan amount and click LendEther button of loanRequest to accept and issue the loan <br/>
+	
+• Upon successful completion, collateral tokens will be transferred from borrower to the new loan contract, the Lender’s ETH balance will be reduced by loan amount which is transferred to virgoContract while the borrower’s token and ETH balances are updated (can be verified via the balance functions of virgoContract) <br/>
+
+## Repaying/Repossessing The Loan <br/>
+• Open the new loan object by copying the loan object address under loanRequest, change CONTRACT field to Loan, and entering the loan object address in At Address. The loan object will appear in the lefthand column <br/>
+	
+• The loan can be repaid anytime before the due date. Check Fakenow for current time and check due date. fastforward shifts 400 days. <br/>
+	
+• To repay the loan, set msg.sender to the borrower (though technically anyone can repay the loan). Set msg.value to loan payoffamount amount and click payLoan <br/>
+	
+• Borrower will transfer ETH payoff amount to the loan contract which via selfdestruct will transfer ETH to the Lender <br/>
+	
+• The borrower will receive the collateral back, as well as reduction in ETH balance to reflect loan payment, both reflected in the user balances virgoContract <br/>
+	
+• Loans that are not repaid before the due date are subject to repossession whereby token collateral is transferred from loan contract to the lender <br/>
+	
+• To test this due to selfdestruct, need to re-issue another loan on same terms: <br/>
+	
+• Set msg.sender to Lender <br/>
+	
+• Open existing loanRequest.<br/>
+	
+• Check At Address empty <br/>
+	
+• Set msg.value to loan amount and click LendEther <br/>
+	
+• Open Loan: <br/>
+	
+• Change CONTRACT field to Loan <br/>
+	
+• Enter new loan address (in loanRequest) in At Address field, loan contract appears in left hand column <br/>
+	
+• set msgSender to Lender <br/>
+	
+• Check Fakenow & dueDate <br/>
+	
+• FAST FORWARD past due date <br/>
+	
+• click repossess. Lender token balance under Token should now reflect the collateral as balance <br/>
+
 
 </details>
 
